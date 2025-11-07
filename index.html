@@ -399,7 +399,13 @@
 
 <script>
     const TOKEN_KEY = 'pssi_auth_token';
-    const SCRIPT_URL = '<?= ScriptApp.get='https://script.google.com/macros/s/AKfycbyBsympDroMMxFCLSMef3XE30qyLn25CogphubbMzmd9kXFG-XkjVdQf-ygRVROjW6zTw/exec' ?>'; // Digunakan di Apps Script untuk mendapatkan URL deploy
+    
+    // [PERBAIKAN KRUSIAL UNTUK GITHUB PAGES]
+    // Anda harus mengganti string placeholder di bawah ini dengan URL deployment Apps Script Anda (URL akhiran "/exec").
+    // Langkah: Deploy -> New Deployment -> Select Type: Web App -> Execute as: Me -> Who has access: Anyone -> Deploy.
+    // Salin URL yang dihasilkan dan letakkan di sini.
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBsympDroMMxFCLSMef3XE30qyLn25CogphubbMzmd9kXFG-XkjVdQf-ygRVROjW6zTw/exec';
+    
     let currentUser = null;
     let pollingInterval = null;
     let currentChatTarget = null;
@@ -408,22 +414,33 @@
 
     // --- 1. FUNGSI UTILITY GLOBAL ---
 
-    function callAppsScript(action, data = {}) {
-        data.action = action;
-        const url = SCRIPT_URL; 
+    async function callAppsScript(action, data = {}) {
+        if (SCRIPT_URL === 'GANTI_DENGAN_URL_APPS_SCRIPT_ANDA_YANG_AKHIRAN_NYA_ADALAH_/exec') {
+            showToast('ERROR: SCRIPT_URL belum diatur. Harap ganti placeholder di Index.html.', 'danger');
+            return { status: 'error', message: 'SCRIPT_URL belum diatur.' };
+        }
         
-        return fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .catch(error => {
+        data.action = action;
+        
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST', // WAJIB POST untuk Apps Script API endpoint
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            // Apps Script akan mengembalikan JSON string, jadi kita perlu parse
+            const text = await response.text();
+            return JSON.parse(text);
+
+        } catch (error) {
             console.error('Error calling Apps Script:', error);
-            return { status: 'error', message: 'Gagal terhubung ke server Apps Script.' };
-        });
+            // Gagal terhubung/CORS error biasanya akan tertangkap di sini
+            showToast('Gagal terhubung ke Apps Script API. Pastikan URL sudah benar dan deployment Apps Script sudah diatur untuk "Anyone".', 'danger');
+            return { status: 'error', message: 'Gagal terhubung ke server Apps Script. (CORS/URL error)' };
+        }
     }
 
     function showToast(message, type = 'success') {
@@ -433,11 +450,21 @@
         
         toastTitle.textContent = type === 'danger' ? 'Error' : (type === 'warning' ? 'Peringatan' : 'Sukses');
         toastEl.className = 'toast hide'; // Reset class
-        toastBody.className = `toast-body text-${type}`;
-        toastBody.textContent = message;
+        
+        // Atur warna header
+        toastEl.querySelector('.toast-header').classList.remove('bg-danger', 'text-white', 'bg-warning', 'text-dark', 'bg-success');
+        if (type === 'danger') {
+            toastEl.querySelector('.toast-header').classList.add('bg-danger', 'text-white');
+            toastBody.className = `toast-body text-danger`;
+        } else if (type === 'warning') {
+            toastEl.querySelector('.toast-header').classList.add('bg-warning', 'text-dark');
+            toastBody.className = `toast-body text-dark`;
+        } else {
+            toastEl.querySelector('.toast-header').classList.add('bg-success', 'text-white');
+            toastBody.className = `toast-body text-success`;
+        }
 
-        if (type === 'danger') toastEl.querySelector('.toast-header').classList.add('bg-danger', 'text-white');
-        else toastEl.querySelector('.toast-header').classList.remove('bg-danger', 'text-white');
+        toastBody.textContent = message;
 
         const toast = new bootstrap.Toast(toastEl);
         toast.show();
@@ -488,7 +515,9 @@
             updateView(true, result.user);
         } else {
             updateView(false);
-            showToast('Sesi habis atau tidak valid. Silakan login kembali.', 'warning');
+            if (result.status !== 'error') { // Hindari menampilkan pesan jika error adalah error koneksi
+                showToast('Sesi habis atau tidak valid. Silakan login kembali.', 'warning');
+            }
         }
     }
 
@@ -524,7 +553,7 @@
 
     async function loadFormA1Data() {
         const token = localStorage.getItem(TOKEN_KEY);
-        if (!token) return;
+        if (!token || !currentUser) return;
 
         document.getElementById('a1-id-klub').value = currentUser.ID_KLUB;
         document.getElementById('a1-nama-resmi-klub').value = currentUser.NAMA_KLUB;
