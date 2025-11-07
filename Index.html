@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PSSI Mentawai Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .centered-top-modal {
+            margin-top: 5vh;
+        }
+        .chat-admin-item:hover {
+            cursor: pointer;
+            background-color: #e2e6ea;
+        }
+        .chat-admin-item.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5" id="login-view">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>PSSI Mentawai Admin Login</h4>
+                </div>
+                <div class="card-body">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="login-button">Login</button>
+                        </div>
+                        <p class="text-danger mt-3 text-center" id="login-error"></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-3 d-none" id="dashboard-view">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand text-primary fw-bold" href="#">PSSI Mentawai</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3" id="user-info"></span>
+                <button class="btn btn-outline-danger" id="logout-button">Logout</button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="mainTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-pane" type="button" role="tab">Dashboard</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="a1-tab" data-bs-toggle="tab" data-bs-target="#a1-pane" type="button" role="tab">FORM A1</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="a2-tab" data-bs-toggle="tab" data-bs-target="#a2-pane" type="button" role="tab">FORM A2</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="a3-tab" data-bs-toggle="tab" data-bs-target="#a3-pane" type="button" role="tab">FORM A3</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="berita-tab" data-bs-toggle="tab" data-bs-target="#berita-pane" type="button" role="tab">BERITA</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat-pane" type="button" role="tab">CHAT ADMIN</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content pt-3" id="mainTabContent">
+                <div class="tab-pane fade show active" id="home-pane" role="tabpanel" aria-labelledby="home-tab">
+                    <h4>Selamat Datang, <span id="welcome-user"></span>!</h4>
+                    <p>Silakan gunakan menu di atas untuk mengelola data klub dan informasi lainnya.</p>
+                </div>
+
+                <div class="tab-pane fade" id="a1-pane" role="tabpanel" aria-labelledby="a1-tab">
+                    <h3>Data Klub (FORM A1)</h3>
+                    <p id="a1-status-message"></p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#a1Modal">
+                        <span id="a1-button-text">Isi/Edit Data Klub</span>
+                    </button>
+                    </div>
+
+                <div class="tab-pane fade" id="a2-pane" role="tabpanel" aria-labelledby="a2-tab">
+                    <h3>Pemain Kolektif (FORM A2)</h3>
+                    <button class="btn btn-success" id="tambahPemainButton">Tambah Pemain Baru</button>
+                    <div id="a2-table-container" class="mt-3 table-responsive">
+                        <p class="text-center text-muted">Memuat data pemain...</p>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="a3-pane" role="tabpanel" aria-labelledby="a3-tab">
+                    <h3>Pendaftaran Pertandingan (FORM A3)</h3>
+                    <button class="btn btn-success" id="a3-open-modal-button" data-bs-toggle="modal" data-bs-target="#a3Modal">
+                        Buat Jadwal / Daftar Pemain
+                    </button>
+                    <div id="a3-table-container" class="mt-3 table-responsive">
+                        <p class="text-center text-muted">Memuat daftar lineup dan jadwal...</p>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="berita-pane" role="tabpanel" aria-labelledby="berita-tab">
+                    <h3>Daftar Berita</h3>
+                    <button class="btn btn-success mb-3" id="tambahBeritaButton">Tulis Berita Baru</button>
+                    <div id="berita-list-container">
+                        <p class="text-center text-muted">Memuat daftar berita...</p>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="chat-pane" role="tabpanel" aria-labelledby="chat-tab">
+                    <h3>Chat Antar Admin</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5>Daftar Admin Aktif</h5>
+                            <ul class="list-group" id="admin-list">
+                                <li class="list-group-item text-center text-muted">Memuat daftar...</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-8">
+                            <h5 id="chat-target-header">Pilih Admin untuk Chat</h5>
+                            <div id="chat-window" class="border p-3 mb-3" style="height: 350px; overflow-y: scroll; background-color: #f8f9fa;">
+                                <p class="text-center text-muted">Pesan akan muncul di sini.</p>
+                            </div>
+                            <form id="chat-form" class="d-flex d-none">
+                                <input type="text" id="chat-input" class="form-control me-2" placeholder="Ketik pesan..." required>
+                                <button type="submit" class="btn btn-primary">Kirim</button>
+                            </form>
+                            <p id="chat-error-message" class="text-danger mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="a1Modal" tabindex="-1" aria-labelledby="a1ModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg centered-top-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="a1ModalLabel">Form A1: Data Klub</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formA1">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">ID Klub (Otomatis)</label>
+                            <input type="text" class="form-control" id="a1-id-klub" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Resmi Klub (Otomatis)</label>
+                            <input type="text" class="form-control" id="a1-nama-resmi-klub" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="a1-julukan-klub" class="form-label">Julukan Klub</label>
+                            <input type="text" class="form-control" id="a1-julukan-klub" name="JULUKAN_KLUB" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="a1-tanggal-berdiri" class="form-label">Tanggal Berdiri</label>
+                            <input type="date" class="form-control" id="a1-tanggal-berdiri" name="TANGGAL_BERDIRI" required>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="a1-alamat" class="form-label">Alamat Lengkap</label>
+                            <textarea class="form-control" id="a1-alamat" name="ALAMAT" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3"><label for="a1-desa" class="form-label">Desa</label><input type="text" class="form-control" id="a1-desa" name="DESA"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-kecamatan" class="form-label">Kecamatan</label><input type="text" class="form-control" id="a1-kecamatan" name="KECAMATAN"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-provinsi" class="form-label">Provinsi</label><input type="text" class="form-control" id="a1-provinsi" name="PROVINSI"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-no-hp" class="form-label">No. HP</label><input type="tel" class="form-control" id="a1-no-hp" name="NO_HANDPHONE"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-email" class="form-label">Email</label><input type="email" class="form-control" id="a1-email" name="EMAIL"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-manajer" class="form-label">Manajer</label><input type="text" class="form-control" id="a1-manajer" name="MANAJER" required></div>
+                        <div class="col-md-6 mb-3"><label for="a1-asisten-manajer" class="form-label">Asisten Manajer</label><input type="text" class="form-control" id="a1-asisten-manajer" name="ASISTEN_MANAJER"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-sekretaris" class="form-label">Sekretaris</label><input type="text" class="form-control" id="a1-sekretaris" name="SEKRETARIS"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-bendahara" class="form-label">Bendahara</label><input type="text" class="form-control" id="a1-bendahara" name="BENDAHARA"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-media" class="form-label">Media</label><input type="text" class="form-control" id="a1-media" name="MEDIA"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-pelatih" class="form-label">Pelatih</label><input type="text" class="form-control" id="a1-pelatih" name="PELATIH"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-asisten-pelatih" class="form-label">Asisten Pelatih</label><input type="text" class="form-control" id="a1-asisten-pelatih" name="ASISTEN_PELATIH"></div>
+                        <div class="col-md-6 mb-3"><label for="a1-staff-lainnya" class="form-label">Staff Lainnya</label><input type="text" class="form-control" id="a1-staff-lainnya" name="STAFF_LAINNYA"></div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="saveA1Button">Simpan Data Klub</button>
+                  </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="a2Modal" tabindex="-1" aria-labelledby="a2ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg centered-top-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="a2ModalLabel">Form A2: Data Pemain Kolektif</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formA2">
+        <input type="hidden" id="a2-old-id-pemain" name="OLD_ID_PEMAIN">
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="a2-id-pemain" class="form-label">ID Pemain (16 Angka)</label>
+                    <input type="number" class="form-control" id="a2-id-pemain" name="ID_PEMAIN" required minlength="16" maxlength="16">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="a2-npg" class="form-label">Nomor Punggung (Maks 3 Angka)</label>
+                    <input type="number" class="form-control" id="a2-npg" name="NPG" required min="1" max="999">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="a2-nama-lengkap" class="form-label">Nama Lengkap</label>
+                    <input type="text" class="form-control" id="a2-nama-lengkap" name="NAMA_LENGKAP" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="a2-nama-punggung" class="form-label">Nama Punggung</label>
+                    <input type="text" class="form-control" id="a2-nama-punggung" name="NAMA_PUNGGUNG" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="a2-tanggal-lahir" class="form-label">Tanggal Lahir</label>
+                    <input type="date" class="form-control" id="a2-tanggal-lahir" name="TANGGAL_LAHIR" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Usia (Tahun, Otomatis)</label>
+                    <input type="text" class="form-control" id="a2-usia" disabled>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="a2-keterangan" class="form-label">Keterangan</label>
+                    <textarea class="form-control" id="a2-keterangan" name="KETERANGAN" rows="2"></textarea>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary" id="saveA2Button">Simpan Pemain</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="a3Modal" tabindex="-1" aria-labelledby="a3ModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg centered-top-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="a3ModalLabel">Form A3: Pendaftaran Pertandingan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <form id="formA3_Pusat" class="p-3 d-none">
+          <div class="row">
+              <h6 class="text-primary mb-3">Buat Jadwal Pertandingan (ADMIN PUSAT)</h6>
+              <div class="col-md-6 mb-3">
+                  <label for="a3-pusat-tanggal" class="form-label">Tanggal Pertandingan</label>
+                  <input type="date" class="form-control" id="a3-pusat-tanggal" name="TANGGAL_PERTANDINGAN" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label for="a3-pusat-lokasi" class="form-label">Lokasi Pertandingan</label>
+                  <input type="text" class="form-control" id="a3-pusat-lokasi" name="LOKASI_PERTANDINGAN" required>
+              </div>
+              <div class="col-12 mb-3">
+                  <label for="a3-pusat-id-klub" class="form-label">ID Klub Target Jadwal</label>
+                  <input type="text" class="form-control" id="a3-pusat-id-klub" name="ID_KLUB" placeholder="Contoh: APM-001" required>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-success">Buat Jadwal</button>
+          </div>
+      </form>
+      
+      <form id="formA3_Klub" class="p-3 d-none">
+          <div class="row">
+              <h6 class="text-primary mb-3">Daftar Pemain Line-Up (ADMIN KLUB)</h6>
+              <div class="col-12 mb-3">
+                  <label for="a3-klub-jadwal-ref" class="form-label">Pilih Jadwal Pertandingan</label>
+                  <select class="form-select" id="a3-klub-jadwal-ref" name="ID_LINEUP_REF" required>
+                      <option value="">-- Pilih Jadwal --</option>
+                  </select>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                  <label for="a3-klub-pemain-ref" class="form-label">Pilih Pemain Kolektif</label>
+                  <select class="form-select" id="a3-klub-pemain-ref" name="ID_PEMAIN_REF" required>
+                      <option value="">-- Pilih Pemain --</option>
+                  </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label for="a3-klub-no-punggung" class="form-label">Nomor Punggung Baru (Bisa Diubah)</label>
+                  <input type="number" class="form-control" id="a3-klub-no-punggung" name="NO_PUNGGUNG_BARU" required min="1" max="999">
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                  <label for="a3-klub-tipe" class="form-label">Tipe Pemain</label>
+                  <select class="form-select" id="a3-klub-tipe" name="TIPE_PEMAIN" required>
+                      <option value="PEMAIN UTAMA">PEMAIN UTAMA</option>
+                      <option value="PEMAIN CADANGAN">PEMAIN CADANGAN</option>
+                  </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                  <label for="a3-klub-posisi" class="form-label">Posisi</label>
+                  <select class="form-select" id="a3-klub-posisi" name="POSISI" required>
+                      <option value="KIPER">KIPER</option>
+                      <option value="BEK">BEK</option>
+                      <option value="GELANDANG">GELANDANG</option>
+                      <option value="PENYERANG">PENYERANG</option>
+                  </select>
+              </div>
+              <input type="hidden" id="a3-klub-nama-punggung-ref" name="NAMA_PUNGGUNG_REF">
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-primary">Daftarkan Pemain</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="beritaModal" tabindex="-1" aria-labelledby="beritaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg centered-top-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="beritaModalLabel">Form Berita PSSI Mentawai</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formBerita">
+        <input type="hidden" id="berita-id" name="ID_BERITA">
+        <div class="modal-body">
+            <div class="mb-3">
+                <label for="berita-judul" class="form-label">Judul Berita</label>
+                <input type="text" class="form-control" id="berita-judul" name="JUDUL_BERITA" required>
+            </div>
+            <div class="mb-3">
+                <label for="berita-isi" class="form-label">Isi Berita</label>
+                <textarea class="form-control" id="berita-isi" name="ISI_BERITA" rows="10" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="berita-foto-url" class="form-label">URL Foto (Link Gambar)</label>
+                <input type="url" class="form-control" id="berita-foto-url" name="POTO_URL">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary" id="saveBeritaButton">Publikasikan Berita</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmationModalLabel">Konfirmasi</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="confirmationModalBody">
+        Anda yakin ingin melakukan aksi ini?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" id="confirmActionButton">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+    <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toast-title">Notifikasi</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-body">
+            Pesan notifikasi.
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const TOKEN_KEY = 'pssi_auth_token';
+    const SCRIPT_URL = '<?= ScriptApp.get='https://script.google.com/macros/s/AKfycbyBsympDroMMxFCLSMef3XE30qyLn25CogphubbMzmd9kXFG-XkjVdQf-ygRVROjW6zTw/exec' ?>'; // Digunakan di Apps Script untuk mendapatkan URL deploy
+    let currentUser = null;
+    let pollingInterval = null;
+    let currentChatTarget = null;
+    let lastReadTimestamp = 0;
+
+
+    // --- 1. FUNGSI UTILITY GLOBAL ---
+
+    function callAppsScript(action, data = {}) {
+        data.action = action;
+        const url = SCRIPT_URL; 
+        
+        return fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .catch(error => {
+            console.error('Error calling Apps Script:', error);
+            return { status: 'error', message: 'Gagal terhubung ke server Apps Script.' };
+        });
+    }
+
+    function showToast(message, type = 'success') {
+        const toastEl = document.getElementById('liveToast');
+        const toastBody = document.getElementById('toast-body');
+        const toastTitle = document.getElementById('toast-title');
+        
+        toastTitle.textContent = type === 'danger' ? 'Error' : (type === 'warning' ? 'Peringatan' : 'Sukses');
+        toastEl.className = 'toast hide'; // Reset class
+        toastBody.className = `toast-body text-${type}`;
+        toastBody.textContent = message;
+
+        if (type === 'danger') toastEl.querySelector('.toast-header').classList.add('bg-danger', 'text-white');
+        else toastEl.querySelector('.toast-header').classList.remove('bg-danger', 'text-white');
+
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    function updateView(isLoggedIn, user = null) {
+        if (isLoggedIn && user) {
+            document.getElementById('login-view').classList.add('d-none');
+            document.getElementById('dashboard-view').classList.remove('d-none');
+            currentUser = user;
+            
+            document.getElementById('welcome-user').textContent = user.USERNAME;
+            document.getElementById('user-info').textContent = `${user.USERNAME} (${user.TIPE_USER})`;
+            
+            // Tampilkan/Sembunyikan tombol spesifik untuk ADMIN PUSAT
+            const isAdminPusat = user.TIPE_USER === 'ADMIN_PUSAT';
+            document.getElementById('a3-open-modal-button').classList.toggle('btn-success', isAdminPusat);
+            document.getElementById('a3-open-modal-button').classList.toggle('btn-primary', !isAdminPusat);
+            document.getElementById('a3-open-modal-button').textContent = isAdminPusat ? 'Buat Jadwal' : 'Daftar Pemain';
+
+        } else {
+            document.getElementById('login-view').classList.remove('d-none');
+            document.getElementById('dashboard-view').classList.add('d-none');
+            localStorage.removeItem(TOKEN_KEY);
+            currentUser = null;
+        }
+    }
+
+    function showConfirmationModal(message, callback) {
+        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        document.getElementById('confirmationModalBody').innerHTML = message;
+        document.getElementById('confirmActionButton').onclick = () => {
+            callback();
+            modal.hide();
+        };
+        modal.show();
+    }
+
+    // --- 2. FUNGSI OTENTIKASI & INITIAL LOAD ---
+
+    async function checkExistingSession() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return updateView(false);
+
+        const result = await callAppsScript('checkSession', { token });
+        
+        if (result.status === 'valid') {
+            updateView(true, result.user);
+        } else {
+            updateView(false);
+            showToast('Sesi habis atau tidak valid. Silakan login kembali.', 'warning');
+        }
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('login-error');
+        errorMsg.textContent = 'Proses Login...';
+
+        const result = await callAppsScript('login', { username, password });
+        
+        if (result.status === 'success') {
+            localStorage.setItem(TOKEN_KEY, result.token);
+            updateView(true, result.user);
+            errorMsg.textContent = '';
+        } else {
+            errorMsg.textContent = result.message;
+        }
+    });
+
+    document.getElementById('logout-button').addEventListener('click', async () => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (token) {
+            await callAppsScript('logout', { token });
+        }
+        if (pollingInterval) clearInterval(pollingInterval);
+        updateView(false);
+        showToast('Logout Berhasil.');
+    });
+
+    // --- 3. CRUD FORM A1 ---
+
+    async function loadFormA1Data() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+
+        document.getElementById('a1-id-klub').value = currentUser.ID_KLUB;
+        document.getElementById('a1-nama-resmi-klub').value = currentUser.NAMA_KLUB;
+        
+        const result = await callAppsScript('readFormA1', { token });
+
+        if (result.status === 'success' && result.data) {
+            const data = result.data;
+            document.getElementById('a1-julukan-klub').value = data.JULUKAN_KLUB || '';
+            const tglBerdiri = data.TANGGAL_BERDIRI instanceof Date ? data.TANGGAL_BERDIRI.toISOString().split('T')[0] : data.TANGGAL_BERDIRI;
+            document.getElementById('a1-tanggal-berdiri').value = tglBerdiri || '';
+            document.getElementById('a1-alamat').value = data.ALAMAT || '';
+            document.getElementById('a1-desa').value = data.DESA || '';
+            document.getElementById('a1-kecamatan').value = data.KECAMATAN || '';
+            document.getElementById('a1-provinsi').value = data.PROVINSI || '';
+            document.getElementById('a1-no-hp').value = data.NO_HANDPHONE || '';
+            document.getElementById('a1-email').value = data.EMAIL || '';
+            document.getElementById('a1-manajer').value = data.MANAJER || '';
+            document.getElementById('a1-asisten-manajer').value = data.ASISTEN_MANAJER || '';
+            document.getElementById('a1-sekretaris').value = data.SEKRETARIS || '';
+            document.getElementById('a1-bendahara').value = data.BENDAHARA || '';
+            document.getElementById('a1-media').value = data.MEDIA || '';
+            document.getElementById('a1-pelatih').value = data.PELATIH || '';
+            document.getElementById('a1-asisten-pelatih').value = data.ASISTEN_PELATIH || '';
+            document.getElementById('a1-staff-lainnya').value = data.STAFF_LAINNYA || '';
+            
+            document.getElementById('a1-button-text').textContent = 'Edit Data Klub';
+            document.getElementById('a1-status-message').innerHTML = '<p class="text-success">Data Klub sudah terdaftar.</p>';
+        } else if (result.status === 'success' && !result.data) {
+            document.getElementById('formA1').reset();
+            document.getElementById('a1-button-text').textContent = 'Isi Data Klub';
+            document.getElementById('a1-status-message').innerHTML = '<p class="text-warning">Data Klub belum diisi.</p>';
+        } else {
+             showToast(result.message, 'danger');
+        }
+    }
+
+    document.getElementById('formA1').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem(TOKEN_KEY);
+        const form = e.target;
+        const formData = {};
+        
+        form.querySelectorAll('[name]').forEach(input => {
+            formData[input.name] = input.value;
+        });
+
+        const result = await callAppsScript('saveFormA1', { token, formData });
+        const a1ModalElement = document.getElementById('a1Modal');
+        
+        if (result.status === 'success') {
+            showToast(result.message);
+            const modal = bootstrap.Modal.getInstance(a1ModalElement);
+            if(modal) modal.hide();
+            loadFormA1Data();
+        } else {
+            showToast(result.message, 'danger');
+        }
+    });
+
+    document.getElementById('a1-tab').addEventListener('show.bs.tab', loadFormA1Data);
+
+    // --- 4. CRUD FORM A2 ---
+
+    function populateFormA2(data = {}) {
+        document.getElementById('formA2').reset();
+        const isEdit = Object.keys(data).length > 0;
+        
+        document.getElementById('a2ModalLabel').textContent = isEdit ? 'Form A2: Edit Pemain' : 'Form A2: Tambah Pemain Baru';
+        document.getElementById('saveA2Button').textContent = isEdit ? 'Perbarui Pemain' : 'Simpan Pemain';
+        document.getElementById('a2-old-id-pemain').value = isEdit ? data.ID_PEMAIN : '';
+        document.getElementById('a2-usia').value = isEdit ? data.USIA : '';
+        
+        if (isEdit) {
+            document.getElementById('a2-id-pemain').value = data.ID_PEMAIN;
+            document.getElementById('a2-npg').value = data.NPG;
+            document.getElementById('a2-nama-lengkap').value = data.NAMA_LENGKAP;
+            document.getElementById('a2-nama-punggung').value = data.NAMA_PUNGGUNG;
+            const tglLahir = data.TANGGAL_LAHIR instanceof Date ? data.TANGGAL_LAHIR.toISOString().split('T')[0] : data.TANGGAL_LAHIR;
+            document.getElementById('a2-tanggal-lahir').value = tglLahir;
+            document.getElementById('a2-keterangan').value = data.KETERANGAN;
+        }
+        
+        const a2Modal = new bootstrap.Modal(document.getElementById('a2Modal'));
+        a2Modal.show();
+    }
+
+    async function loadFormA2Table() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+
+        const result = await callAppsScript('readFormA2', { token });
+        const container = document.getElementById('a2-table-container');
+        container.innerHTML = '<p class="text-center text-muted">Memuat data pemain...</p>';
+        
+        if (result.status !== 'success') {
+            showToast(result.message, 'danger');
+            container.innerHTML = '<p class="text-danger">Gagal memuat data pemain.</p>';
+            if (result.status === 'expired') updateView(false);
+            return;
+        }
+
+        if (result.data.length === 0) {
+            container.innerHTML = '<p class="text-center text-info">Belum ada pemain yang terdaftar.</p>';
+            return;
+        }
+
+        let tableHTML = `
+            <table class="table table-striped table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ID Pemain</th>
+                        <th>Nama Lengkap</th>
+                        <th>NPG</th>
+                        <th>Tgl Lahir</th>
+                        <th>Usia</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        result.data.forEach((pemain, index) => {
+            tableHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${pemain.ID_PEMAIN}</td>
+                    <td>${pemain.NAMA_LENGKAP}</td>
+                    <td>${pemain.NPG}</td>
+                    <td>${pemain.TANGGAL_LAHIR instanceof Date ? pemain.TANGGAL_LAHIR.toISOString().split('T')[0] : pemain.TANGGAL_LAHIR}</td>
+                    <td>${pemain.USIA}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-a2-btn" data-id='${JSON.stringify(pemain)}'>Edit</button>
+                        <button class="btn btn-sm btn-danger delete-a2-btn" data-id="${pemain.ID_PEMAIN}" data-nama="${pemain.NAMA_LENGKAP}">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableHTML += '</tbody></table>';
+        container.innerHTML = tableHTML;
+        
+        document.querySelectorAll('.edit-a2-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const dataPemain = JSON.parse(e.target.dataset.id);
+                populateFormA2(dataPemain);
+            });
+        });
+
+        document.querySelectorAll('.delete-a2-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const idPemain = e.target.dataset.id;
+                const namaPemain = e.target.dataset.nama;
+                showConfirmationModal(`Hapus Pemain **${namaPemain}** (${idPemain})?`, () => {
+                    handleDeleteA2(idPemain);
+                });
+            });
+        });
+    }
+
+    document.getElementById('tambahPemainButton').addEventListener('click', () => {
+        populateFormA2({});
+    });
+
+    document.getElementById('formA2').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem(TOKEN_KEY);
+        const oldIdPemain = document.getElementById('a2-old-id-pemain').value;
+        const formData = {};
+        
+        e.target.querySelectorAll('[name]').forEach(input => {
+            formData[input.name] = input.value;
+        });
+
+        let action = oldIdPemain ? 'updateFormA2' : 'createFormA2';
+        let payload = { token, formData };
+        
+        if (oldIdPemain) {
+            payload.oldIdPemain = oldIdPemain;
+        }
+
+        const result = await callAppsScript(action, payload);
+        const a2ModalElement = document.getElementById('a2Modal');
+        
+        if (result.status === 'success') {
+            showToast(result.message);
+            const modal = bootstrap.Modal.getInstance(a2ModalElement);
+            if(modal) modal.hide();
+            loadFormA2Table();
+        } else {
+            showToast(result.message, 'danger');
+        }
+    });
+
+    async function handleDeleteA2(id_pemain) {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const result = await callAppsScript('deleteFormA2', { token, id_pemain });
+
+        if (result.status === 'success') {
+            showToast(result.message);
+            loadFormA2Table();
+        } else {
+            showToast(result.message, 'danger');
+        }
+    }
+
+    document.getElementById('a2-tab').addEventListener('show.bs.tab', loadFormA2Table);
+
+    // --- 5. CRUD FORM A3 ---
+
+    const a3ModalElement = document.getElementById('a3Modal');
+
+    a3ModalElement.addEventListener('show.bs.modal', () => {
+        const userType = currentUser ? currentUser.TIPE_USER : '';
+        
+        document.getElementById('formA3_Pusat').classList.add('d-none');
+        document.getElementById('formA3_Klub').classList.add('d-none');
+        
+        if (userType === 'ADMIN_PUSAT') {
+            document.getElementById('a3ModalLabel').textContent = 'FORM A3: Buat Jadwal Pertandingan';
+            document.getElementById('formA3_Pusat').classList.remove('d-none');
+            document.getElementById('formA3_Pusat').reset();
+        } else if (userType === 'ADMIN_KLUB') {
+            document.getElementById('a3ModalLabel').textContent = 'FORM A3: Daftar Pemain Line-Up';
+            document.getElementById('formA3_Klub').classList.remove('d-none');
+            document.getElementById('formA3_Klub').reset();
+            loadA3ClubRegistrationData();
+        } else {
+            showToast('Akses ditolak untuk tipe user ini.', 'danger');
+        }
+    });
+
+    async function loadA3ClubRegistrationData() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+
+        const playerResult = await callAppsScript('readClubA2Players', { token });
+        const playerSelect = document.getElementById('a3-klub-pemain-ref');
+        playerSelect.innerHTML = '<option value="">-- Pilih Pemain --</option>';
+
+        if (playerResult.status === 'success' && playerResult.players) {
+            playerResult.players.forEach(p => {
+                playerSelect.innerHTML += `<option value="${p.ID_PEMAIN}" data-npg="${p.NO_PUNGGUNG}" data-namapunggung="${p.NAMA_PUNGGUNG}">
+                    ${p.NAMA_PUNGGUNG} (NPG: ${p.NO_PUNGGUNG})
+                </option>`;
+            });
+        }
+
+        const scheduleResult = await callAppsScript('readA3Schedule', { token, filter: 'schedule' });
+        const scheduleSelect = document.getElementById('a3-klub-jadwal-ref');
+        scheduleSelect.innerHTML = '<option value="">-- Pilih Jadwal --</option>';
+
+        if (scheduleResult.status === 'success' && scheduleResult.data) {
+            scheduleResult.data.forEach(s => {
+                const dateString = s.TANGGAL_PERTANDINGAN instanceof Date ? s.TANGGAL_PERTANDINGAN.toLocaleDateString('id-ID') : s.TANGGAL_PERTANDINGAN;
+                scheduleSelect.innerHTML += `<option value="${s['ID_LINE-UP']}">
+                    ${dateString} - ${s.LOKASI_PERTANDINGAN}
+                </option>`;
+            });
+        }
+
+        playerSelect.addEventListener('change', () => {
+            const selectedOption = playerSelect.options[playerSelect.selectedIndex];
+            if (selectedOption.value) {
+                const defaultNPG = selectedOption.dataset.npg;
+                const namaPunggung = selectedOption.dataset.namapunggung;
+                document.getElementById('a3-klub-no-punggung').value = defaultNPG;
+                document.getElementById('a3-klub-nama-punggung-ref').value = namaPunggung;
+            } else {
+                document.getElementById('a3-klub-no-punggung').value = '';
+                document.getElementById('a3-klub-nama-punggung-ref').value = '';
+            }
+        });
+    }
+
+    document.getElementById('formA3_Pusat').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem(TOKEN_KEY);
+        const formData = {};
+        e.target.querySelectorAll('[name]').forEach(input => { formData[input.name] = input.value; });
+
+        const result = await callAppsScript('createA3Schedule', { token, formData });
+
+        if (result.status === 'success') {
+            showToast(result.message);
+            const modal = bootstrap.Modal.getInstance(a3ModalElement);
+            if(modal) modal.hide();
+            loadFormA3Table();
+        } else {
+            showToast(result.message, 'danger');
+        }
+    });
+
+    document.getElementById('formA3_Klub').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem(TOKEN_KEY);
+        const formData = {};
+        e.target.querySelectorAll('[name]').forEach(input => { formData[input.name] = input.value; });
+
+        const result = await callAppsScript('registerA3Lineup', { token, formData });
+
+        if (result.status === 'success') {
+            showToast(result.message);
+            e.target.reset();
+            loadFormA3Table();
+            loadA3ClubRegistrationData(); // Muat ulang jadwal karena ada yang sudah terisi
+        } else {
+            showToast(result.message, 'danger');
+        }
+    });
+
+    async function loadFormA3Table() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const container = document.getElementById('a3-table-container');
+        
+        // Baca semua lineup yang sudah terdaftar
+        const result = await callAppsScript('readA3Schedule', { token, filter: 'lineup' }); 
+        container.innerHTML = '<p class="text-center text-muted">Memuat daftar lineup yang sudah terdaftar...</p>';
+
+        if (result.status !== 'success') {
+             container.innerHTML = `<p class="text-danger">${result.message}</p>`;
+             return;
+        }
+
+        if (result.data.length === 0) {
+            container.innerHTML = '<p class="text-center text-info">Belum ada pemain yang didaftarkan ke pertandingan.</p>';
+            return;
+        }
+        
+        // Grouping data berdasarkan ID_LINE-UP (Jadwal)
+        const groupedData = result.data.reduce((acc, current) => {
+            const key = current['ID_LINE-UP'];
+            if (!acc[key]) {
+                acc[key] = {
+                    schedule: current,
+                    players: []
+                };
+            }
+            acc[key].players.push(current);
+            return acc;
+        }, {});
+
+        let html = '';
+        for (const id in groupedData) {
+            const group = groupedData[id];
+            const schedule = group.schedule;
+            const players = group.players;
+            const date = schedule.TANGGAL_PERTANDINGAN instanceof Date ? schedule.TANGGAL_PERTANDINGAN.toLocaleDateString('id-ID') : schedule.TANGGAL_PERTANDINGAN;
+
+            html += `
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Jadwal: ${date} - ${schedule.LOKASI_PERTANDINGAN} (Klub: ${schedule.ID_KLUB})</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Total Pemain Didaftarkan: ${players.length}</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Nama Punggung</th>
+                                    <th>No.</th>
+                                    <th>Posisi</th>
+                                    <th>Tipe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${players.map(p => `
+                                    <tr>
+                                        <td>${p.NAMA_PUNGGUNG}</td>
+                                        <td>${p.NO_PUNGGUNG}</td>
+                                        <td>${p.POSISI}</td>
+                                        <td>${p.TIPE_PEMAIN}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    document.getElementById('a3-tab').addEventListener('show.bs.tab', loadFormA3Table);
+
+    // --- 6. CRUD BERITA ---
+
+    const beritaModalElement = document.getElementById('beritaModal');
+
+    function populateFormBerita(data = {}) {
+        const isEdit = Object.keys(data).length > 0;
+        document.getElementById('formBerita').reset();
+        
+        document.getElementById('beritaModalLabel').textContent = isEdit ? 'Edit Berita' : 'Tulis Berita Baru';
+        document.getElementById('saveBeritaButton').textContent = isEdit ? 'Perbarui Berita' : 'Publikasikan Berita';
+        
+        document.getElementById('berita-id').value = isEdit ? data.ID_BERITA : '';
+        document.getElementById('berita-judul').value = isEdit ? data.JUDUL_BERITA : '';
+        document.getElementById('berita-isi').value = isEdit ? data.ISI_BERITA : '';
+        document.getElementById('berita-foto-url').value = isEdit ? data.POTO_URL : '';
+
+        const modal = new bootstrap.Modal(beritaModalElement);
+        modal.show();
+    }
+
+    async function loadBeritaList() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+
+        const result = await callAppsScript('readBerita', { token });
+        const container = document.getElementById('berita-list-container');
+        container.innerHTML = '<p class="text-center text-muted">Memuat daftar berita...</p>';
+        
+        if (result.status !== 'success') {
+            showToast(result.message, 'danger');
+            container.innerHTML = '<p class="text-danger">Gagal memuat berita.</p>';
+            if (result.status === 'expired') updateView(false);
+            return;
+        }
+
+        if (result.data.length === 0) {
+            container.innerHTML = '<p class="text-center text-info">Belum ada berita yang dipublikasikan.</p>';
+            return;
+        }
+
+        let listHTML = '';
+
+        result.data.forEach((berita) => {
+            const isMyPost = currentUser && berita.PENULIS === currentUser.USERNAME;
+            const formattedDate = new Date(berita.TANGGAL).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            
+            listHTML += `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">${berita.JUDUL_BERITA}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            Dipublikasikan pada ${formattedDate} oleh <strong>${berita.PENULIS}</strong>
+                        </h6>
+                        ${berita.POTO_URL ? `<img src="${berita.POTO_URL}" class="img-fluid mb-2" alt="Foto Berita" style="max-height: 200px; object-fit: cover;">` : ''}
+                        <p class="card-text">${berita.ISI_BERITA.substring(0, 200)}...</p>
+                        
+                        ${isMyPost ? `
+                            <button class="btn btn-sm btn-warning edit-berita-btn" data-id='${JSON.stringify(berita)}'>Edit</button>
+                            <button class="btn btn-sm btn-danger delete-berita-btn" data-id="${berita.ID_BERITA}" data-judul="${berita.JUDUL_BERITA}">Hapus</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = listHTML;
+        
+        document.querySelectorAll('.edit-berita-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const data = JSON.parse(e.target.dataset.id);
+                populateFormBerita(data);
+            });
+        });
+
+        document.querySelectorAll('.delete-berita-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const idBerita = e.target.dataset.id;
+                const judul = e.target.dataset.judul;
+                showConfirmationModal(`Hapus Berita: **${judul}**?`, () => {
+                    handleDeleteBerita(idBerita);
+                });
+            });
+        });
+    }
+
+    document.getElementById('formBerita').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem(TOKEN_KEY);
+        const idBerita = document.getElementById('berita-id').value;
+        
+        const formData = {};
+        e.target.querySelectorAll('[name]').forEach(input => { formData[input.name] = input.value; });
+
+        let action = idBerita ? 'updateBerita' : 'createBerita';
+        let payload = { token, formData };
+        
+        if (idBerita) {
+            payload.id_berita = idBerita;
+        }
+
+        const result = await callAppsScript(action, payload);
+        
+        if (result.status === 'success') {
+            showToast(result.message);
+            const modal = bootstrap.Modal.getInstance(beritaModalElement);
+            if(modal) modal.hide();
+            loadBeritaList();
+        } else {
+            showToast(result.message, 'danger');
+        }
+    });
+
+    async function handleDeleteBerita(id_berita) {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const result = await callAppsScript('deleteBerita', { token, id_berita });
+
+        if (result.status === 'success') {
+            showToast(result.message);
+            loadBeritaList();
+        } else {
+            showToast(result.message, 'danger');
+        }
+    }
+
+    document.getElementById('tambahBeritaButton').addEventListener('click', () => {
+        populateFormBerita({});
+    });
+
+    document.getElementById('berita-tab').addEventListener('show.bs.tab', loadBeritaList);
+
+    // --- 7. FUNGSI CHAT ---
+
+    function startChatSession(targetUsername, targetNama) {
+        if (pollingInterval) clearInterval(pollingInterval);
+
+        currentChatTarget = targetUsername;
+        lastReadTimestamp = 0;
+        
+        document.getElementById('chat-target-header').textContent = `Chat dengan ${targetNama}`;
+        document.getElementById('chat-form').classList.remove('d-none');
+        document.getElementById('chat-window').innerHTML = '<p class="text-center text-muted">Memuat riwayat chat...</p>';
+        document.getElementById('chat-input').focus();
+        
+        loadAdminList();
+        loadChatHistory(true);
+        
+        pollingInterval = setInterval(() => {
+            loadChatHistory(false);
+        }, 5000);
+    }
+
+    async function loadAdminList() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const result = await callAppsScript('getAdminListAndStatus', { token });
+        const listContainer = document.getElementById('admin-list');
+        listContainer.innerHTML = '';
+        
+        if (result.status !== 'success') {
+            listContainer.innerHTML = `<li class="list-group-item text-danger">${result.message}</li>`;
+            return;
+        }
+
+        if (result.admins.length === 0) {
+            listContainer.innerHTML = `<li class="list-group-item text-info">Tidak ada admin lain yang terdaftar.</li>`;
+            return;
+        }
+        
+        result.admins.sort((a, b) => {
+            if (a.isOnline !== b.isOnline) return b.isOnline - a.isOnline;
+            return a.nama.localeCompare(b.nama);
+        });
+
+        result.admins.forEach(admin => {
+            const badgeClass = admin.isOnline ? 'bg-success' : 'bg-secondary';
+            const itemClass = admin.username === currentChatTarget ? 'active' : '';
+
+            const item = document.createElement('li');
+            item.className = `list-group-item d-flex justify-content-between align-items-center chat-admin-item ${itemClass}`;
+            item.dataset.username = admin.username;
+            item.dataset.nama = admin.nama;
+            item.innerHTML = `
+                ${admin.nama}
+                <span class="badge ${badgeClass} rounded-pill">${admin.status}</span>
+            `;
+            listContainer.appendChild(item);
+            
+            item.addEventListener('click', () => startChatSession(admin.username, admin.nama));
+        });
+    }
+
+    async function loadChatHistory(isFullLoad = true) {
+        if (!currentChatTarget) return;
+
+        const token = localStorage.getItem(TOKEN_KEY);
+        const payload = { 
+            token, 
+            targetUser: currentChatTarget,
+            lastReadTimestamp: isFullLoad ? 0 : lastReadTimestamp 
+        };
+        
+        const result = await callAppsScript('readChatHistory', payload);
+        const chatWindow = document.getElementById('chat-window');
+
+        if (result.status !== 'success') {
+            if (isFullLoad) chatWindow.innerHTML = `<p class="text-danger">${result.message}</p>`;
+            return;
+        }
+
+        if (isFullLoad) chatWindow.innerHTML = '';
+        
+        if (result.data.length === 0 && isFullLoad) {
+            chatWindow.innerHTML = '<p class="text-center text-muted">Belum ada pesan. Mulai percakapan Anda.</p>';
+            return;
+        }
+
+        if (result.data.length > 0) {
+            let maxTimestamp = lastReadTimestamp;
+            
+            result.data.forEach(msg => {
+                const isSender = msg.pengirim === currentUser.USERNAME;
+                const alignClass = isSender ? 'text-end' : 'text-start';
+                const bgClass = isSender ? 'bg-primary text-white' : 'bg-light text-dark';
+                const marginClass = isSender ? 'ms-auto' : 'me-auto';
+
+                const formattedTime = new Date(msg.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                const messageHtml = `
+                    <div class="${alignClass} mb-2">
+                        <div class="d-inline-block p-2 rounded ${bgClass} ${marginClass}" style="max-width: 80%;">
+                            <small class="fw-bold">${isSender ? 'Anda' : msg.pengirim}</small>
+                            <p class="mb-0">${msg.pesan}</p>
+                            <small class="text-xs opacity-75 ${isSender ? 'text-light' : 'text-muted'}">${formattedTime}</small>
+                        </div>
+                    </div>
+                `;
+                chatWindow.innerHTML += messageHtml;
+
+                if (msg.timestamp > maxTimestamp) maxTimestamp = msg.timestamp;
+            });
+
+            lastReadTimestamp = maxTimestamp;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const inputField = document.getElementById('chat-input');
+        const message = inputField.value.trim();
+        const token = localStorage.getItem(TOKEN_KEY);
+        
+        if (!message || !currentChatTarget) return;
+        
+        const result = await callAppsScript('sendChatMessage', { 
+            token, 
+            targetUser: currentChatTarget, 
+            message: message 
+        });
+
+        if (result.status === 'success') {
+            inputField.value = '';
+            loadChatHistory(true);
+        } else {
+            document.getElementById('chat-error-message').textContent = result.message;
+            setTimeout(() => document.getElementById('chat-error-message').textContent = '', 3000);
+        }
+    });
+
+    document.getElementById('chat-tab').addEventListener('show.bs.tab', () => {
+        loadAdminList();
+        if (currentChatTarget) {
+            const targetNama = document.getElementById('chat-target-header').textContent.replace('Chat dengan ', '');
+            startChatSession(currentChatTarget, targetNama);
+        }
+        if (!pollingInterval) {
+             pollingInterval = setInterval(loadAdminList, 10000);
+        }
+    });
+
+    document.getElementById('chat-tab').addEventListener('hide.bs.tab', () => {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    });
+
+    // --- 8. INITIALIZE ---
+    document.addEventListener('DOMContentLoaded', checkExistingSession);
+</script>
+</body>
+</html>
