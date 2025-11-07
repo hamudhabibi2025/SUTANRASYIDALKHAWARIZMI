@@ -11,10 +11,13 @@
         body { background-color: #f8f9fa; }
         #login-container { height: 100vh; display: flex; align-items: center; justify-content: center; }
         .dashboard-header { background-color: #4b0082; color: white; padding: 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .nav-link.active { font-weight: bold; }
         .data-card { margin-top: 20px; }
         .table-responsive { max-height: 400px; overflow-y: auto; }
         .table thead th { position: sticky; top: 0; background: #fff; z-index: 10; }
+        #chat-history { height: 350px; overflow-y: scroll; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; }
+        .chat-message { margin-bottom: 8px; }
+        .chat-message small { display: block; font-size: 0.75em; color: #888; }
+        .chat-message strong { font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -25,12 +28,13 @@
         // ==============================================================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOkpgcTeEoV239l9dlehpiBqFXSJoNu4z2HjiAmyxjrbtFX7LicellXP-l4PCCDKw/exec"; 
         
-        
-        // --- UTILITY FUNCTIONS ---
-        
+        // --- GLOBAL STATE ---
         let $sessionData = { user: null, token: null };
         let currentPlayersA2 = []; // Cache data pemain A2
+        let currentFormsA3 = []; // Cache data form A3
+        let currentNews = []; // Cache data berita
 
+        // --- UTILITY FUNCTIONS ---
         function showNotification(message, type = 'info') {
             const alertPlaceholder = document.getElementById('alertPlaceholder');
             const wrapper = document.createElement('div');
@@ -49,7 +53,7 @@
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json', // Mengirim JSON
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(args)
                 });
@@ -61,12 +65,12 @@
 
             } catch (error) {
                 console.error("Fetch Error:", error);
-                showNotification(`Koneksi gagal ke server Apps Script. Error: ${error.message}`, 'danger');
+                showNotification(`Koneksi gagal ke server Apps Script. Cek URL dan Deployment. Error: ${error.message}`, 'danger');
                 return { success: false, message: "Koneksi gagal ke server Apps Script. Cek URL dan Deployment." };
             }
         }
 
-        // --- MANAJEMEN SESI ---
+        // --- MANAJEMEN SESI & AUTH ---
 
         function saveSession(token) {
             localStorage.setItem('pssi_mentawai_token', token);
@@ -102,11 +106,7 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            const result = await postData({ 
-                action: 'login', 
-                username: username, 
-                password: password 
-            });
+            const result = await postData({ action: 'login', username: username, password: password });
 
             if (result.success) {
                 saveSession(result.token);
@@ -124,10 +124,11 @@
             clearSession();
             showNotification("Anda telah logout.", 'info');
         }
-
-        // --- RENDER HALAMAN ---
+        
+        // --- RENDER HALAMAN (Login & Dashboard) ---
 
         function renderLoginPage() {
+            // ... (Kode Login Page - Sama seperti sebelumnya) ...
             document.getElementById('app').innerHTML = `
                 <div id="login-container">
                     <div class="card shadow" style="max-width: 400px; width: 90%;">
@@ -156,6 +157,7 @@
 
         function renderDashboardPage() {
             const user = $sessionData.user;
+            const isAdminPusat = user.userType === 'ADMIN_PUSAT';
             document.getElementById('app').innerHTML = `
                 <div class="dashboard-header d-flex justify-content-between align-items-center">
                     <h5>Dashboard PSSI Mentawai</h5>
@@ -169,9 +171,9 @@
                     <ul class="nav nav-tabs" id="mainTab" role="tablist">
                         <li class="nav-item"><a class="nav-link active" id="a1-tab" data-bs-toggle="tab" data-bs-target="#a1" type="button">Data Klub (A1)</a></li>
                         <li class="nav-item"><a class="nav-link" id="a2-tab" data-bs-toggle="tab" data-bs-target="#a2" type="button" onclick="loadPlayersA2()">Pemain Kolektif (A2)</a></li>
-                        <li class="nav-item"><a class="nav-link" id="a3-tab" data-bs-toggle="tab" data-bs-target="#a3" type="button">Pendaftaran Pertandingan (A3)</a></li>
-                        <li class="nav-item"><a class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button">Berita</a></li>
-                        <li class="nav-item"><a class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat" type="button">Chat Admin</a></li>
+                        <li class="nav-item"><a class="nav-link" id="a3-tab" data-bs-toggle="tab" data-bs-target="#a3" type="button" onclick="loadFormsA3()">Pendaftaran Pertandingan (A3)</a></li>
+                        <li class="nav-item"><a class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button" onclick="loadNews()">Berita</a></li>
+                        <li class="nav-item"><a class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat" type="button" onclick="loadChatHistory()">Chat Admin</a></li>
                     </ul>
                     <div class="tab-content" id="mainTabContent">
                         <div class="tab-pane fade show active" id="a1" role="tabpanel">
@@ -182,20 +184,41 @@
                         </div>
                         <div class="tab-pane fade" id="a2" role="tabpanel">
                             <div class="data-card card shadow-sm p-4">
-                                <h3 class="d-flex justify-content-between align-items-center">
-                                    Daftar Pemain Kolektif (A2)
+                                <h3 class="d-flex justify-content-between align-items-center">Daftar Pemain Kolektif (A2)
                                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#playerModal" onclick="preparePlayerModal('add')"><i class="fas fa-plus"></i> Tambah Pemain</button>
                                 </h3>
                                 <div id="a2-content" class="mt-3">Loading data...</div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="a3" role="tabpanel">... Konten A3 ...</div>
-                        <div class="tab-pane fade" id="news" role="tabpanel">... Konten Berita ...</div>
-                        <div class="tab-pane fade" id="chat" role="tabpanel">... Konten Chat ...</div>
+                        <div class="tab-pane fade" id="a3" role="tabpanel">
+                            <div class="data-card card shadow-sm p-4">
+                                <h3 class="d-flex justify-content-between align-items-center">Daftar Pendaftaran Pertandingan (A3)
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#a3Modal" onclick="prepareA3Modal('add')"><i class="fas fa-plus"></i> Daftar Pertandingan</button>
+                                </h3>
+                                <div id="a3-content" class="mt-3">Loading data...</div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="news" role="tabpanel">
+                            <div class="data-card card shadow-sm p-4">
+                                <h3 class="d-flex justify-content-between align-items-center">Berita dan Pengumuman
+                                    ${isAdminPusat ? '<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newsModal" onclick="prepareNewsModal(\'add\')"><i class="fas fa-plus"></i> Publikasikan</button>' : ''}
+                                </h3>
+                                <div id="news-content" class="mt-3">Loading data...</div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="chat" role="tabpanel">
+                            <div class="data-card card shadow-sm p-4">
+                                <h3>Chat Antar Admin</h3>
+                                <div id="chat-history"></div>
+                                <form id="chatForm" class="mt-3 d-flex" onsubmit="sendChatMessage(event)">
+                                    <input type="text" id="chat-input" class="form-control me-2" placeholder="Ketik pesan..." required>
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Kirim</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
-            // Panggil fungsi untuk memuat data A1 saat dashboard dimuat
             loadDataA1();
         }
 
@@ -208,16 +231,13 @@
             }
         }
         
-        // --- LOGIKA A1 (Data Klub) ---
-        
-        async function loadDataA1() {
-             const result = await postData({ 
-                action: 'getDataA1', 
-                token: $sessionData.token
-            });
-            const contentDiv = document.getElementById('a1-content');
+        // --- LOGIKA A1 (Data Klub) --- (Sama seperti sebelumnya)
 
-            if (result.success && result.data.id_klub) {
+        async function loadDataA1() {
+             const result = await postData({ action: 'getDataA1', token: $sessionData.token });
+             const contentDiv = document.getElementById('a1-content');
+            // ... (lanjutkan logika rendering A1 dan fungsi prepareA1Modal/submitA1Form) ...
+             if (result.success && result.data.id_klub) {
                 const data = result.data;
                 contentDiv.innerHTML = `
                     <p><strong>ID Klub:</strong> ${data.id_klub}</p>
@@ -267,21 +287,18 @@
             const result = await postData(data);
             showNotification(result.message, result.success ? 'success' : 'danger');
             if (result.success) {
-                // Tutup modal dan muat ulang data
                 const modal = bootstrap.Modal.getInstance(document.getElementById('a1Modal'));
                 modal.hide();
                 loadDataA1();
             }
         }
-        
-        // --- LOGIKA A2 (Pemain Kolektif) ---
 
+        // --- LOGIKA A2 (Pemain Kolektif) --- (Sama seperti sebelumnya)
         async function loadPlayersA2() {
             const result = await postData({ action: 'getPlayersA2', token: $sessionData.token });
             const contentDiv = document.getElementById('a2-content');
-            
             if (result.success) {
-                currentPlayersA2 = result.data; // Simpan ke cache
+                currentPlayersA2 = result.data; 
                 renderPlayersTable(result.data);
             } else {
                 contentDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
@@ -295,7 +312,9 @@
                 return;
             }
 
-            let tableHtml = `
+            let tableHtml = `...`; // (Html table rendering)
+            // ... (gunakan kode renderPlayersTable dari jawaban sebelumnya) ...
+             let tableHtml = `
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
                         <thead class="bg-light">
@@ -304,7 +323,7 @@
                                 <th>ID Pemain</th>
                                 <th>Nama Lengkap</th>
                                 <th>NPG</th>
-                                <th>Tanggal Lahir</th>
+                                <th>TTL</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -319,8 +338,8 @@
                         <td>${p.npg}</td>
                         <td>${p.tanggal_lahir}</td>
                         <td>
-                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#playerModal" onclick="preparePlayerModal('edit', ${p.rowIndex})"><i class="fas fa-edit"></i> Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deletePlayerA2(${p.rowIndex})"><i class="fas fa-trash"></i> Hapus</button>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#playerModal" onclick="preparePlayerModal('edit', ${p.rowindex})"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePlayerA2(${p.rowindex})"><i class="fas fa-trash"></i> Hapus</button>
                         </td>
                     </tr>
                 `;
@@ -341,9 +360,8 @@
                 modalTitle.textContent = "Tambah Pemain Baru";
             } else {
                 modalTitle.textContent = "Edit Data Pemain";
-                const player = currentPlayersA2.find(p => p.rowIndex == rowIndex);
+                const player = currentPlayersA2.find(p => p.rowindex == rowIndex);
                 if (player) {
-                    // Isi form dengan data pemain yang akan diedit
                     form.elements['id_pemain'].value = player.id_pemain;
                     form.elements['nama_lengkap'].value = player.nama_lengkap;
                     form.elements['nama_punggung'].value = player.nama_punggung;
@@ -358,12 +376,10 @@
         async function submitPlayerForm(event) {
             event.preventDefault();
             const form = event.target;
-            const mode = form.elements['mode'].value;
-
             const data = {
                 action: 'savePlayerA2',
                 token: $sessionData.token,
-                mode: mode,
+                mode: form.elements['mode'].value,
                 rowIndex: form.elements['rowIndex'].value,
                 idKlub: $sessionData.user.idKlub,
                 namaKlub: $sessionData.user.namaKlub,
@@ -382,7 +398,7 @@
             if (result.success) {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('playerModal'));
                 modal.hide();
-                loadPlayersA2(); // Muat ulang tabel
+                loadPlayersA2();
             }
         }
         
@@ -390,17 +406,249 @@
              if (!confirm("Apakah Anda yakin ingin menghapus pemain ini?")) {
                 return;
             }
-            const result = await postData({ 
-                action: 'deletePlayerA2', 
-                token: $sessionData.token, 
-                rowIndex: rowIndex
-            });
+            const result = await postData({ action: 'deletePlayerA2', token: $sessionData.token, rowIndex: rowIndex });
             showNotification(result.message, result.success ? 'success' : 'danger');
             if (result.success) {
                 loadPlayersA2();
             }
         }
+        
+        // --- LOGIKA A3 (Pendaftaran Pertandingan) ---
+        
+        async function loadFormsA3() {
+            const result = await postData({ action: 'getFormA3', token: $sessionData.token });
+            const contentDiv = document.getElementById('a3-content');
+            if (result.success) {
+                currentFormsA3 = result.data;
+                renderFormsA3Table(result.data);
+            } else {
+                 contentDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+            }
+        }
+        
+        function renderFormsA3Table(forms) {
+            const contentDiv = document.getElementById('a3-content');
+             if (forms.length === 0) {
+                contentDiv.innerHTML = '<div class="alert alert-info">Belum ada pendaftaran pertandingan.</div>';
+                return;
+            }
+            // ... (lanjutkan logika rendering tabel A3) ...
+             let tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Tanggal Daftar</th>
+                                <th>Tgl. Pertandingan</th>
+                                <th>Lawan</th>
+                                <th>Lokasi</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            forms.forEach((f, index) => {
+                tableHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${new Date(f.tanggal_pendaftaran).toLocaleDateString()}</td>
+                        <td>${f.tgl_pertandingan}</td>
+                        <td>${f.lawan}</td>
+                        <td>${f.lokasi}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#a3Modal" onclick="prepareA3Modal('edit', ${f.rowindex})"><i class="fas fa-edit"></i> Edit</button>
+                            </td>
+                    </tr>
+                `;
+            });
+            tableHtml += '</tbody></table></div>';
+            contentDiv.innerHTML = tableHtml;
+        }
 
+        function prepareA3Modal(mode, rowIndex = null) {
+            const modalTitle = document.getElementById('a3ModalLabel');
+            const form = document.getElementById('a3Form');
+            form.reset();
+            form.elements['mode'].value = mode;
+            form.elements['rowIndex'].value = rowIndex;
+            
+            if (mode === 'add') {
+                modalTitle.textContent = "Daftar Pertandingan Baru";
+            } else {
+                modalTitle.textContent = "Edit Pendaftaran Pertandingan";
+                const formA3 = currentFormsA3.find(f => f.rowindex == rowIndex);
+                if (formA3) {
+                    form.elements['tgl_pertandingan'].value = formA3.tgl_pertandingan;
+                    form.elements['lawan'].value = formA3.lawan;
+                    form.elements['lokasi'].value = formA3.lokasi;
+                    form.elements['catatan'].value = formA3.catatan;
+                }
+            }
+        }
+
+        async function submitA3Form(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                action: 'submitA3',
+                token: $sessionData.token,
+                mode: form.elements['mode'].value,
+                rowIndex: form.elements['rowIndex'].value,
+                idKlub: $sessionData.user.idKlub,
+                namaKlub: $sessionData.user.namaKlub,
+                tgl_pertandingan: form.elements['tgl_pertandingan'].value,
+                lawan: form.elements['lawan'].value,
+                lokasi: form.elements['lokasi'].value,
+                catatan: form.elements['catatan'].value,
+            };
+
+            const result = await postData(data);
+            showNotification(result.message, result.success ? 'success' : 'danger');
+            
+            if (result.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('a3Modal'));
+                modal.hide();
+                loadFormsA3();
+            }
+        }
+        
+        // --- LOGIKA NEWS ---
+        
+        async function loadNews() {
+            const result = await postData({ action: 'getNews', token: $sessionData.token }); // Token tetap dikirim untuk auth header (jika diperlukan)
+            const contentDiv = document.getElementById('news-content');
+            
+            if (result.success) {
+                currentNews = result.data;
+                renderNewsList(result.data);
+            } else {
+                contentDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+            }
+        }
+
+        function renderNewsList(newsList) {
+            const contentDiv = document.getElementById('news-content');
+            if (newsList.length === 0) {
+                contentDiv.innerHTML = '<div class="alert alert-info">Belum ada berita atau pengumuman.</div>';
+                return;
+            }
+
+            let html = '<div class="list-group">';
+            newsList.forEach(n => {
+                html += `
+                    <div class="list-group-item list-group-item-action flex-column align-items-start">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">${n.judul}</h5>
+                            <small>${new Date(n.timestamp).toLocaleDateString()}</small>
+                        </div>
+                        <p class="mb-1">${n.konten}</p>
+                        <small>Dipublikasikan oleh: ${n.admin_publikasi}</small>
+                        ${$sessionData.user.userType === 'ADMIN_PUSAT' ? `<button class="btn btn-sm btn-outline-warning ms-2" data-bs-toggle="modal" data-bs-target="#newsModal" onclick="prepareNewsModal('edit', ${n.rowindex})"><i class="fas fa-edit"></i></button>` : ''}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            contentDiv.innerHTML = html;
+        }
+        
+        function prepareNewsModal(mode, rowIndex = null) {
+            const modalTitle = document.getElementById('newsModalLabel');
+            const form = document.getElementById('newsForm');
+            form.reset();
+            form.elements['mode'].value = mode;
+            form.elements['rowIndex'].value = rowIndex;
+
+            if (mode === 'add') {
+                modalTitle.textContent = "Publikasikan Berita Baru";
+            } else {
+                modalTitle.textContent = "Edit Berita";
+                const news = currentNews.find(n => n.rowindex == rowIndex);
+                if (news) {
+                    form.elements['judul'].value = news.judul;
+                    form.elements['konten'].value = news.konten;
+                }
+            }
+        }
+
+        async function submitNewsForm(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                action: 'publishNews',
+                token: $sessionData.token,
+                mode: form.elements['mode'].value,
+                rowIndex: form.elements['rowIndex'].value,
+                judul: form.elements['judul'].value,
+                konten: form.elements['konten'].value,
+            };
+
+            const result = await postData(data);
+            showNotification(result.message, result.success ? 'success' : 'danger');
+            
+            if (result.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newsModal'));
+                modal.hide();
+                loadNews();
+            }
+        }
+
+        // --- LOGIKA CHAT ---
+        
+        async function loadChatHistory() {
+            const result = await postData({ action: 'getChatHistory', token: $sessionData.token });
+            const chatDiv = document.getElementById('chat-history');
+            
+            if (result.success) {
+                renderChatHistory(result.data);
+            } else {
+                chatDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+            }
+        }
+        
+        function renderChatHistory(history) {
+            const chatDiv = document.getElementById('chat-history');
+            chatDiv.innerHTML = '';
+            
+            history.forEach(c => {
+                const isMine = c.username === $sessionData.user.username;
+                const alignment = isMine ? 'text-end' : 'text-start';
+                const color = isMine ? 'alert-info' : 'alert-light';
+                
+                chatDiv.innerHTML += `
+                    <div class="chat-message ${alignment}">
+                        <div class="alert ${color} p-2 d-inline-block" style="max-width: 75%;">
+                            <strong class="${isMine ? 'text-primary' : 'text-success'}">${c.full_name}</strong>
+                            <div>${c.message}</div>
+                            <small>${new Date(c.timestamp).toLocaleTimeString()}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            // Scroll ke pesan terbaru
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+            // Set timeout untuk auto-refresh (misalnya setiap 10 detik)
+            setTimeout(loadChatHistory, 10000); 
+        }
+
+        async function sendChatMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value;
+            
+            const result = await postData({ 
+                action: 'sendChat', 
+                token: $sessionData.token, 
+                message: message 
+            });
+            
+            if (result.success) {
+                input.value = ''; // Kosongkan input
+                loadChatHistory();
+            } else {
+                showNotification("Gagal mengirim pesan chat.", 'danger');
+            }
+        }
 
         // --- INIT ---
         window.onload = checkSession;
@@ -503,10 +751,72 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal fade" id="a3Modal" tabindex="-1" aria-labelledby="a3ModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="a3Form" onsubmit="submitA3Form(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="a3ModalLabel">Form Pendaftaran Pertandingan (A3)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="mode">
+                        <input type="hidden" name="rowIndex">
+                        <div class="mb-3">
+                            <label for="tgl_pertandingan" class="form-label">Tanggal Pertandingan</label>
+                            <input type="date" class="form-control" name="tgl_pertandingan" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lawan" class="form-label">Lawan</label>
+                            <input type="text" class="form-control" name="lawan" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lokasi" class="form-label">Lokasi</label>
+                            <input type="text" class="form-control" name="lokasi" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="catatan" class="form-label">Catatan Tambahan</label>
+                            <textarea class="form-control" name="catatan"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-primary">Simpan Pendaftaran</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
-    <script>
-        document.getElementById('playerForm').addEventListener('submit', submitPlayerForm);
-    </script>
+    <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="newsForm" onsubmit="submitNewsForm(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newsModalLabel">Publikasikan Berita</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="mode">
+                        <input type="hidden" name="rowIndex">
+                        <div class="mb-3">
+                            <label for="judul" class="form-label">Judul Berita</label>
+                            <input type="text" class="form-control" name="judul" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="konten" class="form-label">Konten Berita</label>
+                            <textarea class="form-control" name="konten" rows="5" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="submit" class="btn btn-primary">Publikasikan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
